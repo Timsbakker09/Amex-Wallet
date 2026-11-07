@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Trade & Wealth</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Wealth">
+    <meta name="theme-color" content="#0d0f14">
+    <style>
+        :root {
+            --bg-main: #0d0f14;
+            --bg-card: #151821;
+            --bg-card-alt: #1b1f2b;
+            --bg-input: #0f1218;
+            --border-subtle: #232836;
+            --border-highlight: #31384a;
+            --text-main: #ffffff;
+            --text-muted: #8f96a6;
+            --text-dim: #5e6575;
+            --green: #00d66c;
+            --green-bg: rgba(0, 214, 108, 0.12);
+            --red: #ff3b30;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        input, textarea {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* iOS STANDALONE BLACK BAR FIX: vult 100% inclusief onderste home-indicator */
+        html {
+            width: 100%;
+            height: 100%;
+            min-height: calc(100% + var(--safe-top));
+            background-color: var(--bg-main);
+            overflow: hidden;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            min-height: 100dvh;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow: hidden;
+            font-variant-numeric: tabular-nums;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        .app-shell {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 0%, #171b26 0%, var(--bg-main) 55%);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* BOVENBALK */
+        header.top-bar {
+            padding-top: calc(var(--safe-top) + 6px);
+            padding-bottom: 12px;
+            padding-left: 18px;
+            padding-right: 18px;
+            background: rgba(13, 15, 20, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 30;
+            flex-shrink: 0;
+        }
+
+        .user-trigger {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            cursor: pointer;
+        }
+
+        .avatar-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #232836, #151821);
+            border: 1px solid var(--border-highlight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #f1f5f9;
+        }
+
+        .user-meta .name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--green);
+        }
+
+        .user-meta .iban-row {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .circle-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .pill-btn {
+            height: 36px;
+            padding: 0 13px;
+            border-radius: 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* SCROLLBARE CONTENT - LOOPT DOOR TOT ONDERKANT SCHERM */
+        main.scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px 18px calc(84px + var(--safe-bottom)) 18px;
+        }
+
+        main.scroll-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-view {
+            display: none;
+            animation: fadeIn 0.18s ease-out;
+        }
+
+        .tab-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* PORTFOLIO HERO */
+        .hero-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .hero-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .realtime-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .hero-balance {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+
+        .hero-pnl {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-pnl .period-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* GRAFIEK */
+        .chart-wrapper {
+            position: relative;
+            height: 185px;
+            margin: 12px -18px 8px -18px;
+            width: calc(100% + 36px);
+        }
+
+        canvas#wealthChart {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .tf-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 2px;
+        }
+
+        .tf-pill {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .tf-pill.active {
+            background: var(--bg-card-alt);
+            border-color: var(--border-highlight);
+            color: var(--text-main);
+        }
+
+        /* VRIJE RUIMTE BANNER */
+        .cash-banner {
+            background: linear-gradient(145deg, #171b25, #12151d);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 15px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            cursor: pointer;
+        }
+
+        .cash-banner-left .cb-title {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .cash-banner-left .cb-amount {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .cash-banner-right {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* SECTIE HEADERS */
+        .sec-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .sec-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .mode-toggle-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: #d1d5db;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 11px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* AANDELEN LIJST */
+        .stock-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stock-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .stock-left {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .ticker-badge {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-highlight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .stock-meta .s-name-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 3px;
+        }
+
+        .stock-meta .s-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .qty-pill {
+            background: var(--bg-card-alt);
+            color: #9ca3af;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1.5px 6px;
+            border-radius: 5px;
+        }
+
+        .stock-meta .s-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .stock-right {
+            text-align: right;
+        }
+
+        .stock-right .s-val {
+            font-size: 15.5px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .stock-right .s-subval {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .pos { color: var(--green); }
+        .neg { color: var(--red); }
+
+        /* TAB 2: BEURS & KOERSEN */
+        .page-heading {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .search-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 11px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .input-dark {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .btn-white {
+            background: #ffffff;
+            color: #090a0f;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-dark-pill {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border-highlight);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* TAB 3: CASH & AUTHENTIEKE AMERICAN EXPRESS BLACK CARD */
+        .cash-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .ecb-pill {
+            background: var(--green-bg);
+            color: var(--green);
+            border: 1px solid rgba(0, 214, 108, 0.25);
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        .action-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 9px;
+            margin-bottom: 20px;
+        }
+
+        /* AUTHENTIC AMERICAN EXPRESS CENTURION (AMEX BLACK CARD) */
+        .amex-black-card {
+            position: relative;
+            width: 100%;
+            height: 222px;
+            border-radius: 15px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            background:
+                radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.10) 0%, rgba(0, 0, 0, 0) 60%),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px),
+                linear-gradient(135deg, #1c1d21 0%, #0a0b0d 40%, #15171b 70%, #070809 100%);
+            border: 1px solid #3a3d46;
+            box-shadow:
+                0 18px 38px rgba(0, 0, 0, 0.75),
+                inset 0 1px 1px rgba(255, 255, 255, 0.25);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* Klassieke dubbele Centurion sierlijst */
+        .amex-black-card::before {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border: 1.5px solid rgba(192, 197, 206, 0.22);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .amex-black-card::after {
+            content: "";
+            position: absolute;
+            inset: 9px;
+            border: 1px solid rgba(192, 197, 206, 0.10);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        /* Centurion Gladiator Medaillon in het midden */
+        .centurion-emblem {
+            position: absolute;
+            left: 50%;
+            top: 48%;
+            transform: translate(-50%, -50%);
+            width: 96px;
+            height: 96px;
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .amex-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2;
+            padding: 2px 4px 0 4px;
+        }
+
+        .amex-arched-title {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #e2e8f0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+        }
+
+        .amex-black-pill {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            padding: 3px 7px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.22);
+            color: #cbd5e1;
+        }
+
+        .amex-chip-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+            z-index: 2;
+        }
+
+        .titanium-chip {
+            width: 44px;
+            height: 33px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #d6cfc2 0%, #9ca3af 48%, #cbd5e1 100%);
+            border: 1px solid rgba(0,0,0,0.5);
+            position: relative;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.5);
+        }
+
+        .titanium-chip::after {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+
+        .amex-cid-right {
+            text-align: right;
+        }
+
+        .amex-cid-right .cid-lbl {
+            font-size: 8px;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            display: block;
+        }
+
+        .amex-cid-right .cid-val {
+            font-family: "SF Mono", "Menlo", monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .amex-pan-row {
+            font-family: "SF Mono", "Menlo", "Courier New", monospace;
+            font-size: 18.5px;
+            font-weight: 700;
+            letter-spacing: 2.6px;
+            color: #f8fafc;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.95);
+            padding: 0 4px;
+            z-index: 2;
+        }
+
+        .amex-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 4px 2px 4px;
+            z-index: 2;
+        }
+
+        .amex-lbl {
+            font-size: 8px;
+            letter-spacing: 1.2px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .amex-val {
+            font-family: "SF Mono", "Menlo", monospace;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+        }
+
+        .amex-square-logo {
+            background: linear-gradient(145deg, #272a30, #141619);
+            border: 1px solid rgba(255,255,255,0.28);
+            border-radius: 4px;
+            padding: 4px 7px;
+            text-align: center;
+        }
+
+        .amex-square-logo span {
+            display: block;
+            font-size: 9.5px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #e2e8f0;
+            line-height: 1.05;
+        }
+
+        /* TRANSACTIES */
+        .tx-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tx-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .tx-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .tx-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .tx-amt {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* ONDERSTE NAVIGATIE - ZWEVENDE GLAZEN BALK ZONDER ZWARTE BALK ONDERIN */
+        nav.bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(18, 21, 29, 0.84);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-top: 7px;
+            padding-bottom: max(8px, calc(var(--safe-bottom) - 8px));
+            z-index: 40;
+        }
+
+        .nav-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-size: 10.5px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 0;
+        }
+
+        .nav-btn.active {
+            color: var(--text-main);
+        }
+
+        .nav-btn svg {
+            width: 21px;
+            height: 21px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* PINCODE LOCK MODAL (1560) */
+        .pin-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 15, 20, 0.98);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            z-index: 200;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .pin-overlay.open {
+            display: flex;
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 16px;
+            margin: 24px 0 36px 0;
+        }
+
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1.5px solid #4b5563;
+            background: transparent;
+            transition: all 0.15s ease;
+        }
+
+        .pin-dot.filled {
+            background: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .pin-dot.error {
+            background: var(--red);
+            border-color: var(--red);
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 76px);
+            gap: 18px 24px;
+            justify-content: center;
+        }
+
+        .pin-key {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .pin-key:active {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        /* MODALS */
+        .sheet-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 150;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .sheet-backdrop.open {
+            display: flex;
+        }
+
+        .bottom-sheet {
+            width: 100%;
+            max-width: 500px;
+            background: #161922;
+            border-top: 1px solid var(--border-highlight);
+            border-top-left-radius: 22px;
+            border-top-right-radius: 22px;
+            padding: 22px 20px calc(var(--safe-bottom) + 22px) 20px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* iOS PUSH NOTIFICATIE BANNER - VOLLEDIG ONZICHTBAAR WANNEER INACTIEF */
+        .ios-push {
+            position: fixed;
+            top: calc(var(--safe-top) + 6px);
+            left: 12px;
+            right: 12px;
+            background: rgba(28, 32, 42, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 18px;
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.65);
+            z-index: 300;
+            transform: translateY(-250%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+        }
+
+        .ios-push.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .privacy-blur {
+            filter: blur(8px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <!-- iOS Pushmelding -->
+    <div class="ios-push" id="iosPushBanner">
+        <div class="avatar-circle" style="background:#00d66c; color:#000; border:none; width:36px; height:36px; flex-shrink:0;">€</div>
+        <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9ca3af; margin-bottom:2px;">
+                <span style="font-weight:700; color:#fff;">AMERICAN EXPRESS • WEALTH</span>
+                <span>nu</span>
+            </div>
+            <div style="font-size:13.5px; font-weight:600; color:#fff;" id="pushText">Bijschrijving ontvangen: + € 8.450,00</div>
+        </div>
+    </div>
+
+    <!-- BOVENBALK -->
+    <header class="top-bar">
+        <div class="user-trigger" onclick="requestPinForAdmin()">
+            <div class="avatar-circle" id="hdrAvatar">TV</div>
+            <div class="user-meta">
+                <div class="name-row">
+                    <span id="hdrName">T. van den Berg</span>
+                    <span class="live-dot"></span>
+                </div>
+                <div class="iban-row" id="hdrIban">NL84 TRBK 0918 4412 09</div>
+            </div>
+        </div>
+        <div class="top-actions">
+            <button class="circle-btn" onclick="togglePrivacy()" title="Verberg bedragen">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="pill-btn" onclick="switchTab('beurs')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Beurs
+            </button>
+        </div>
+    </header>
+
+    <!-- HOOFDSCHERM -->
+    <main class="scroll-area">
+
+        <!-- TAB 1: PORTEFEUILLE -->
+        <section id="view-portfolio" class="tab-view active">
+            <div class="hero-header">
+                <span class="hero-label">Totaal vermogen (Belegd + Cash)</span>
+                <span class="realtime-badge"><span class="live-dot"></span> Real-time EUR</span>
+            </div>
+            <div class="hero-balance privacy-target" id="totalWealthEl">€ 270.545,76</div>
+            <div class="hero-pnl">
+                <span class="pos" id="totalPnlEl">+ € 2.788,62 (+1,04%)</span>
+                <span class="period-label" id="periodLabelEl">Vandaag</span>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="wealthChart"></canvas>
+            </div>
+
+            <div class="tf-selector">
+                <button class="tf-pill active" onclick="setTf('1D', 'Vandaag', this)">1D</button>
+                <button class="tf-pill" onclick="setTf('1W', 'Afgelopen week', this)">1W</button>
+                <button class="tf-pill" onclick="setTf('1M', 'Afgelopen maand', this)">1M</button>
+                <button class="tf-pill" onclick="setTf('1J', 'Dit jaar', this)">1J</button>
+                <button class="tf-pill" onclick="setTf('MAX', 'Sinds start', this)">MAX</button>
+            </div>
+
+            <div class="cash-banner" onclick="switchTab('cash')">
+                <div class="cash-banner-left">
+                    <div class="cb-title">Vrije ruimte (Cash • 3,75% rente p.j.)</div>
+                    <div class="cb-amount privacy-target" id="bannerCashEl">€ 34.850,00</div>
+                </div>
+                <div class="cash-banner-right">
+                    Amex Black & Cash
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+            </div>
+
+            <div class="sec-bar">
+                <h2 class="sec-title">Beleggingen (EUR)</h2>
+                <button class="mode-toggle-btn" onclick="cycleDisplayMode()" id="modeToggleBtn">
+                    Koers & Dag % ⌄
+                </button>
+            </div>
+
+            <div class="stock-list" id="portfolioStockList"></div>
+        </section>
+
+        <!-- TAB 2: BEURS & KOERSEN -->
+        <section id="view-beurs" class="tab-view">
+            <h1 class="page-heading">Beurs & Koersen (EUR)</h1>
+            <p class="page-sub">Actuele koersen in euro's • Google Finance & Euronext</p>
+
+            <div class="search-box">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8f96a6" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="marketSearchInput" placeholder="Zoek op naam of ticker (bijv. ASML, NVDA, Shell).." oninput="renderAll()">
+            </div>
+
+            <div class="panel-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:15px; font-weight:700; line-height:1.3;">Eigen Google Finance Ticker<br>toevoegen</span>
+                    <button onclick="syncLivePrices(true)" style="background:none; border:none; color:var(--green); font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Ververs koersen
+                    </button>
+                </div>
+
+                <div class="grid-3">
+                    <input type="text" id="quickTicker" class="input-dark" placeholder="Naam / Ticker">
+                    <input type="number" step="any" id="quickPrice" class="input-dark" placeholder="Koers in €">
+                    <input type="number" step="any" id="quickQty" class="input-dark" placeholder="Aantal stuks">
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <a href="https://www.google.com/finance/?hl=nl" target="_blank" style="color:var(--text-muted); font-size:12.5px; text-decoration:underline;">Open Google Finance NL ↗</a>
+                    <button class="btn-white" onclick="addCustomTicker()">Opslaan in portefeuille</button>
+                </div>
+            </div>
+
+            <div class="sec-bar">
+                <span style="font-size:14px; font-weight:700; color:var(--text-muted);">Aandelen & ETF's in Euro (€)</span>
+                <span style="font-size:12px; color:var(--text-dim);">Tik om positie te wijzigen</span>
+            </div>
+
+            <div class="stock-list" id="marketStockList"></div>
+        </section>
+
+        <!-- TAB 3: CASH & AMERICAN EXPRESS AMEX BLACK CARD -->
+        <section id="view-cash" class="tab-view">
+            <div class="cash-top-row">
+                <div>
+                    <div class="hero-label" style="margin-bottom:4px;">Vrij besteedbaar (Cash & Amex Limiet)</div>
+                    <div class="hero-balance privacy-target" id="cashMainEl" style="font-size:34px;">€ 34.850,00</div>
+                </div>
+                <div style="text-align:right;">
+                    <span class="ecb-pill">3,75% ECB Rente</span>
+                    <div style="font-size:12.5px; color:var(--text-muted); font-weight:600;" id="monthlyInterestEl">+ € 108,91 p/m</div>
+                </div>
+            </div>
+
+            <div class="action-row-3">
+                <button class="btn-white" onclick="openQuickCashModal('deposit')">+ Storten</button>
+                <button class="btn-dark-pill" onclick="openQuickCashModal('transfer')">↑ Overboeken</button>
+                <button class="btn-dark-pill" onclick="openTxModal(-1)">+ Cashflow</button>
+            </div>
+
+            <!-- AMERICAN EXPRESS AMEX BLACK CARD (CENTURION) -->
+            <div class="amex-black-card" onclick="toggleCardDetails()">
+                <!-- Centurion Gladiator Medaillon -->
+                <svg class="centurion-emblem" viewBox="0 0 120 120" fill="none" stroke="#e2e8f0" stroke-width="2.2">
+                    <circle cx="60" cy="60" r="54"/>
+                    <circle cx="60" cy="60" r="46" stroke-dasharray="5 3"/>
+                    <!-- Romeinse helm kam & profiel -->
+                    <path d="M38 34 C45 16, 78 16, 86 34 C76 30, 50 30, 38 34 Z" fill="rgba(226,232,240,0.2)"/>
+                    <path d="M44 38 C44 26, 74 26, 76 42 C78 52, 74 64, 66 70 L74 88 L42 88 L48 70 C40 62, 42 48, 44 38 Z"/>
+                    <path d="M54 46 L68 46 L66 56 L54 56 Z"/>
+                </svg>
+
+                <div class="amex-header-row">
+                    <div class="amex-arched-title">AMERICAN EXPRESS</div>
+                    <div class="amex-black-pill">AMEX BLACK CARD</div>
+                </div>
+
+                <div class="amex-chip-row">
+                    <div class="titanium-chip"></div>
+                    <div class="amex-cid-right">
+                        <span class="cid-lbl">SECURITY CODE</span>
+                        <span class="cid-val" id="amexCvcEl">8419</span>
+                    </div>
+                </div>
+
+                <div class="amex-pan-row" id="amexCardNumber">3742  ••••••  •8910</div>
+
+                <div class="amex-footer-row">
+                    <div>
+                        <div class="amex-lbl">CARDMEMBER</div>
+                        <div class="amex-val" id="amexHolderEl">T. VAN DEN BERG</div>
+                    </div>
+                    <div>
+                        <div class="amex-lbl">MEMBER SINCE</div>
+                        <div class="amex-val">24</div>
+                    </div>
+                    <div>
+                        <div class="amex-lbl">VALID THRU</div>
+                        <div class="amex-val" id="amexExpEl">09/30</div>
+                    </div>
+                    <div class="amex-square-logo">
+                        <span>AMERICAN</span>
+                        <span>EXPRESS</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sec-bar">
+                <h2 class="sec-title" style="font-size:16.5px;">Bij- en afschrijvingen (Cashflow)</h2>
+                <span style="font-size:11.5px; color:var(--text-dim);">Tik op regel om te wijzigen</span>
+            </div>
+
+            <div id="txListContainer"></div>
+        </section>
+
+        <!-- TAB 4: REKENING & BEHEER (BEVEILIGD MET PIN 1560) -->
+        <section id="view-admin" class="tab-view">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                <div>
+                    <h1 class="page-heading">Rekening & Beheer</h1>
+                    <p class="page-sub" style="margin-bottom:0;">Alles wordt automatisch op dit toestel bewaard</p>
+                </div>
+                <span class="ecb-pill" style="display:flex; align-items:center; gap:6px; padding:6px 11px; border-radius:20px;">
+                    <span class="live-dot"></span> Opgeslagen
+                </span>
+            </div>
+
+            <div class="panel-card">
+                <h3 style="font-size:15px; font-weight:700; margin-bottom:14px;">Rekeninghouder & Vrij Cash Saldo (€)</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label class="field-label">NAAM OP REKENING & AMEX</label>
+                        <input type="text" id="admName" class="input-dark" oninput="saveAdminFields()">
+                    </div>
+                    <div>
+                        <label class="field-label">IBAN REKENINGNUMMER</label>
+                        <input type="text" id="admIban" class="input-dark" oninput="saveAdminFields()">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:10px;">
+                    <div>
+                        <label class="field-label">VRIJ BESTEEDBAAR CASH SALDO (€)</label>
+                        <input type="number" step="any" id="admCash" class="input-dark" style="color:var(--green); font-size:18px; font-weight:800;" oninput="saveAdminFields()">
+                    </div>
+                    <div>
+                        <label class="field-label">AMEX LAATSTE 4 CIJFERS</label>
+                        <input type="text" maxlength="4" id="admCardLast4" class="input-dark" style="font-size:16px;" oninput="saveAdminFields()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <h3 style="font-size:15px; font-weight:700;">Inkomende Cashflow Timer (5 sec)</h3>
+                    <span class="ecb-pill" style="margin:0;">Met Pushmelding</span>
+                </div>
+                <p style="font-size:12.5px; color:var(--text-muted); line-height:1.45; margin-bottom:14px;">
+                    Na 5 seconden verschijnt er een realistische bankmelding, loopt je saldo op en blijft de bijschrijving permanent in je afschriften staan.
+                </p>
+                <div style="display:grid; grid-template-columns:1.4fr 0.8fr; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label class="field-label">AFZENDER / OMSCHRIJVING</label>
+                        <input type="text" id="timerSender" class="input-dark" value="Stripe Payments Europe">
+                    </div>
+                    <div>
+                        <label class="field-label">BEDRAG (€)</label>
+                        <input type="number" step="any" id="timerAmount" class="input-dark" value="8450">
+                    </div>
+                </div>
+                <button class="btn-white" style="width:100%; padding:13px;" onclick="triggerIncomingTimer()">
+                    Start 5-Seconden Storting & Ga naar Portefeuille
+                </button>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-dark-pill" style="flex:1;" onclick="lockAndExitAdmin()">🔒 Vergrendel Beheer</button>
+                <button class="btn-dark-pill" style="color:var(--red); border-color:rgba(255,59,48,0.3);" onclick="resetToDefault()">Reset Data</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ONDERSTE NAVIGATIE -->
+    <nav class="bottom-bar">
+        <button class="nav-btn active" id="nav-portfolio" onclick="switchTab('portfolio')">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Portefeuille
+        </button>
+        <button class="nav-btn" id="nav-beurs" onclick="switchTab('beurs')">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Beurs (EUR)
+        </button>
+        <button class="nav-btn" id="nav-cash" onclick="switchTab('cash')">
+            <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Cash & Pas
+        </button>
+        <button class="nav-btn" id="nav-admin" onclick="requestPinForAdmin()">
+            <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            Rekening
+        </button>
+    </nav>
+</div>
+
+<!-- PINCODE SCHERM (CODE: 1560) -->
+<div class="pin-overlay" id="pinModal">
+    <div style="width:48px; height:48px; border-radius:50%; background:var(--bg-card); border:1px solid var(--border-highlight); display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2 style="font-size:19px; font-weight:700; margin-bottom:4px;">Voer Toegangscode in</h2>
+    <p style="font-size:13px; color:var(--text-muted);">Beveiligde omgeving voor Rekening & Beheer</p>
+
+    <div class="pin-dots" id="pinDots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+    </div>
+
+    <div class="pin-pad">
+        <button class="pin-key" onclick="pressPin('1')">1</button>
+        <button class="pin-key" onclick="pressPin('2')">2</button>
+        <button class="pin-key" onclick="pressPin('3')">3</button>
+        <button class="pin-key" onclick="pressPin('4')">4</button>
+        <button class="pin-key" onclick="pressPin('5')">5</button>
+        <button class="pin-key" onclick="pressPin('6')">6</button>
+        <button class="pin-key" onclick="pressPin('7')">7</button>
+        <button class="pin-key" onclick="pressPin('8')">8</button>
+        <button class="pin-key" onclick="pressPin('9')">9</button>
+        <button class="pin-key" style="font-size:14px; background:transparent; border:none; color:var(--text-muted);" onclick="closePinModal()">Annuleer</button>
+        <button class="pin-key" onclick="pressPin('0')">0</button>
+        <button class="pin-key" style="font-size:20px; background:transparent; border:none;" onclick="backspacePin()">⌫</button>
+    </div>
+</div>
+
+<!-- MODAL: AANDEEL BEWERKEN -->
+<div class="sheet-backdrop" id="stockModal">
+    <div class="bottom-sheet">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="font-size:18px; font-weight:800;" id="smTitle">Positie aanpassen</h3>
+            <button class="circle-btn" style="width:32px; height:32px;" onclick="closeStockModal()">✕</button>
+        </div>
+        <input type="hidden" id="smIndex">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+                <label class="field-label">NAAM AANDEEL / ETF</label>
+                <input type="text" id="smName" class="input-dark">
+            </div>
+            <div>
+                <label class="field-label">TICKER & BEURS</label>
+                <input type="text" id="smSub" class="input-dark">
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:16px;">
+            <div>
+                <label class="field-label">AANTAL STUKS</label>
+                <input type="number" step="any" id="smQty" class="input-dark">
+            </div>
+            <div>
+                <label class="field-label">KOERS (€)</label>
+                <input type="number" step="any" id="smPrice" class="input-dark">
+            </div>
+            <div>
+                <label class="field-label">DAG %</label>
+                <input type="number" step="any" id="smChange" class="input-dark">
+            </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <a id="smGoogleLink" href="https://www.google.com/finance" target="_blank" style="color:var(--green); font-size:13px; font-weight:600;">Bekijk op Google Finance NL ↗</a>
+            <button onclick="deleteStockPos()" style="background:none; border:none; color:var(--red); font-size:13px; font-weight:700; cursor:pointer;">Verwijder positie</button>
+        </div>
+        <button class="btn-white" style="width:100%; padding:13px;" onclick="saveStockModal()">Wijzigingen Opslaan</button>
+    </div>
+</div>
+
+<!-- MODAL: CASHFLOW TRANSACTIE BEWERKEN / TOEVOEGEN -->
+<div class="sheet-backdrop" id="txModal">
+    <div class="bottom-sheet">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="font-size:18px; font-weight:800;" id="txModalTitle">Cashflow Transactie</h3>
+            <button class="circle-btn" style="width:32px; height:32px;" onclick="closeTxModal()">✕</button>
+        </div>
+        <input type="hidden" id="txIndex">
+        <div style="margin-bottom:12px;">
+            <label class="field-label">NAAM / TEGENPARTIJ</label>
+            <input type="text" id="txTitleInp" class="input-dark" placeholder="bijv. ASML Holding N.V. of Stripe">
+        </div>
+        <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:10px; margin-bottom:16px;">
+            <div>
+                <label class="field-label">OMSCHRIJVING & DATUM</label>
+                <input type="text" id="txSubInp" class="input-dark" placeholder="Dividenduitkering • Euronext">
+            </div>
+            <div>
+                <label class="field-label">BEDRAG IN € (GEBRUIK - VOOR AF)</label>
+                <input type="number" step="any" id="txAmtInp" class="input-dark" placeholder="412.75">
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-white" style="flex:1; padding:13px;" onclick="saveTxModal()">Opslaan</button>
+            <button class="btn-dark-pill" style="color:var(--red);" onclick="deleteTxModal()">Verwijder</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'tw_wealth_amex_v3';
+    const SECRET_PIN = '1560';
+
+    const defaultState = {
+        name: 'T. van den Berg',
+        iban: 'NL84 TRBK 0918 4412 09',
+        cash: 34850.00,
+        cardLast4: '8910',
+        stocks: [
+            { symbol: 'ASML', name: 'ASML Holding N.V.', sub: 'ASML • Euronext Amsterdam', qty: 65, price: 749.02, gak: 610.00, changePct: 1.88, gfQuery: 'ASML:AMS' },
+            { symbol: 'NVDA', name: 'NVIDIA Corp. (EUR)', sub: 'NVDA • XETRA • EUR', qty: 310, price: 132.64, gak: 88.50, changePct: 2.59, gfQuery: 'NVDA:NASDAQ' },
+            { symbol: 'VWCE', name: 'Vanguard FTSE All-World ETF', sub: 'VWCE • Euronext Amsterdam', qty: 420, price: 131.20, gak: 109.40, changePct: 0.64, gfQuery: 'VWCE:AMS' },
+            { symbol: 'ADYE', name: 'Adyen N.V.', sub: 'ADYEN • Euronext Amsterdam', qty: 14, price: 1418.00, gak: 1190.00, changePct: 1.42, gfQuery: 'ADYEN:AMS' },
+            { symbol: 'SHEL', name: 'Shell plc', sub: 'SHELL • Euronext Amsterdam', qty: 450, price: 32.85, gak: 28.10, changePct: 0.45, gfQuery: 'SHELL:AMS' },
+            { symbol: 'AAPL', name: 'Apple Inc. (EUR)', sub: 'AAPL • XETRA • EUR', qty: 60, price: 214.90, gak: 175.00, changePct: -0.32, gfQuery: 'AAPL:NASDAQ' },
+            { symbol: 'BTC',  name: 'Bitcoin (EUR)', sub: 'BTC-EUR • Crypto Spot', qty: 0.45, price: 68500.00, gak: 52000.00, changePct: 2.45, gfQuery: 'BTC-EUR' }
+        ],
+        transactions: [
+            { title: 'ASML Holding N.V.', sub: 'Dividenduitkering • Euronext', amount: 412.75 },
+            { title: 'Stripe Payments Europe', sub: 'Zakelijke uitbetaling • Direct', amount: 6840.00 },
+            { title: 'American Express Black Card', sub: 'Centurion Maandafrekening • Incasso', amount: -1890.40 },
+            { title: 'ECB Rente Uitkering', sub: 'Maandelijkse rente (3,75% p.j.)', amount: 108.91 },
+            { title: 'Brasserie van Dam', sub: 'Amsterdam • Amex Black •••• 8910', amount: -245.50 }
+        ]
+    };
+
+    let state = loadState();
+    let displayMode = 0;
+    let currentTf = '1D';
+    let currentPeriodLabel = 'Vandaag';
+    let isPrivacy = false;
+    let isCardRevealed = false;
+    let adminUnlocked = false;
+    let enteredPin = '';
+    let chartCurve = [];
+    let scrubIndex = null;
+
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return JSON.parse(JSON.stringify(defaultState));
+            const parsed = JSON.parse(raw);
+            return Object.assign({}, defaultState, parsed);
+        } catch (e) {
+            return JSON.parse(JSON.stringify(defaultState));
+        }
+    }
+
+    function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function fmtEur(num, showPlus = false) {
+        const abs = Math.abs(num);
+        const formatted = abs.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (num < 0) return `- € ${formatted}`;
+        if (showPlus && num > 0) return `+ € ${formatted}`;
+        return `€ ${formatted}`;
+    }
+
+    function getInitials(name) {
+        return name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'TV';
+    }
+
+    function calculateTotals() {
+        let invested = 0;
+        let dayChangeEur = 0;
+        state.stocks.forEach(s => {
+            const val = s.qty * s.price;
+            invested += val;
+            dayChangeEur += val * (s.changePct / 100);
+        });
+        const totalWealth = invested + (parseFloat(state.cash) || 0);
+        const totalPct = totalWealth > 0 ? (dayChangeEur / totalWealth) * 100 : 0;
+        return { invested, totalWealth, dayChangeEur, totalPct };
+    }
+
+    function renderAll() {
+        document.getElementById('hdrAvatar').textContent = getInitials(state.name);
+        document.getElementById('hdrName').textContent = state.name;
+        document.getElementById('hdrIban').textContent = state.iban;
+
+        const { totalWealth, dayChangeEur, totalPct } = calculateTotals();
+        const tfMult = { '1D': 1, '1W': 2.4, '1M': 6.2, '1J': 24.5, 'MAX': 48.0 }[currentTf] || 1;
+        const shownPnlEur = dayChangeEur * tfMult;
+        const shownPnlPct = totalPct * tfMult;
+
+        if (scrubIndex === null) {
+            document.getElementById('totalWealthEl').textContent = fmtEur(totalWealth);
+            const pnlEl = document.getElementById('totalPnlEl');
+            const sign = shownPnlEur >= 0 ? '+' : '';
+            pnlEl.textContent = `${fmtEur(shownPnlEur, true)} (${sign}${shownPnlPct.toFixed(2).replace('.', ',')}%)`;
+            pnlEl.className = shownPnlEur >= 0 ? 'pos' : 'neg';
+            document.getElementById('periodLabelEl').textContent = currentPeriodLabel;
+        }
+
+        const cashVal = parseFloat(state.cash) || 0;
+        document.getElementById('bannerCashEl').textContent = fmtEur(cashVal);
+        document.getElementById('cashMainEl').textContent = fmtEur(cashVal);
+        const monthlyInt = (cashVal * 0.0375) / 12;
+        document.getElementById('monthlyInterestEl').textContent = `+ ${fmtEur(monthlyInt)} p/m`;
+
+        // American Express Amex Black Card details
+        document.getElementById('amexHolderEl').textContent = state.name.toUpperCase();
+        const last4 = (state.cardLast4 || '8910').padStart(4, '0');
+        document.getElementById('amexCardNumber').textContent = isCardRevealed
+            ? `3742  849102  4${last4}`
+            : `3742  ••••••  •${last4}`;
+        document.getElementById('amexCvcEl').textContent = isCardRevealed ? '8419' : '••••';
+
+        if (document.activeElement.id !== 'admName') document.getElementById('admName').value = state.name;
+        if (document.activeElement.id !== 'admIban') document.getElementById('admIban').value = state.iban;
+        if (document.activeElement.id !== 'admCash') document.getElementById('admCash').value = state.cash;
+        if (document.activeElement.id !== 'admCardLast4') document.getElementById('admCardLast4').value = state.cardLast4;
+
+        const pList = document.getElementById('portfolioStockList');
+        const mList = document.getElementById('marketStockList');
+        const q = (document.getElementById('marketSearchInput')?.value || '').toLowerCase();
+
+        let pHtml = '';
+        let mHtml = '';
+
+        state.stocks.forEach((s, idx) => {
+            const posVal = s.qty * s.price;
+            const totalGain = posVal - (s.qty * (s.gak || s.price * 0.85));
+            const isUp = s.changePct >= 0;
+            const pctStr = `${isUp ? '+' : ''}${s.changePct.toFixed(2).replace('.', ',')}%`;
+
+            let topRight = fmtEur(s.price);
+            let botRight = pctStr;
+
+            if (displayMode === 1) {
+                topRight = fmtEur(posVal);
+                botRight = `${fmtEur(s.price)} (${pctStr})`;
+            } else if (displayMode === 2) {
+                topRight = fmtEur(totalGain, true);
+                botRight = `Waarde: ${fmtEur(posVal)}`;
+            }
+
+            const rowHtml = `
+                <div class="stock-row" onclick="openStockModal(${idx})">
+                    <div class="stock-left">
+                        <div class="ticker-badge">${s.symbol.substring(0, 4)}</div>
+                        <div class="stock-meta">
+                            <div class="s-name-wrap">
+                                <span class="s-name">${s.name}</span>
+                                <span class="qty-pill">${s.qty} st.</span>
+                            </div>
+                            <div class="s-sub">${s.sub}</div>
+                        </div>
+                    </div>
+                    <div class="stock-right">
+                        <div class="s-val ${ isPrivacy && displayMode > 0 ? 'privacy-blur' : '' }">${topRight}</div>
+                        <div class="s-subval ${isUp ? 'pos' : 'neg'}">${botRight}</div>
+                    </div>
+                </div>
+            `;
+
+            pHtml += rowHtml;
+            if (!q || s.name.toLowerCase().includes(q) || s.symbol.toLowerCase().includes(q) || s.sub.toLowerCase().includes(q)) {
+                mHtml += rowHtml;
+            }
+        });
+
+        pList.innerHTML = pHtml;
+        mList.innerHTML = mHtml;
+
+        const txCont = document.getElementById('txListContainer');
+        txCont.innerHTML = state.transactions.map((t, i) => {
+            const isPos = t.amount >= 0;
+            return `
+                <div class="tx-row" onclick="openTxModal(${i})">
+                    <div class="tx-left">
+                        <div class="tx-icon">${isPos ? '↙' : '↗'}</div>
+                        <div>
+                            <div class="tx-title">${t.title}</div>
+                            <div class="tx-sub">${t.sub}</div>
+                        </div>
+                    </div>
+                    <div class="tx-amt ${isPos ? 'pos' : ''} ${isPrivacy ? 'privacy-blur' : ''}">
+                        ${fmtEur(t.amount, true)}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.privacy-target').forEach(el => {
+            el.classList.toggle('privacy-blur', isPrivacy);
+        });
+
+        drawWealthChart();
+    }
+
+    // VLOEIENDE GRAFIEK ZONDER RECHTER-DIP
+    function generateChartCurve() {
+        const count = 52;
+        const offsets = [];
+        let acc = 0;
+        for (let i = 0; i < count; i++) {
+            const progress = i / (count - 1);
+            const wave = Math.sin(i * 0.45) * 0.18 + Math.cos(i * 0.9) * 0.08;
+            offsets.push(progress + wave * (1 - progress * 0.7));
+        }
+        offsets[0] = 0;
+        offsets[count - 1] = 1;
+        chartCurve = offsets;
+    }
+
+    function getChartPoints() {
+        if (chartCurve.length === 0) generateChartCurve();
+        const { totalWealth } = calculateTotals();
+        const volatility = { '1D': 0.011, '1W': 0.032, '1M': 0.075, '1J': 0.22, 'MAX': 0.42 }[currentTf] || 0.011;
+        const startVal = totalWealth * (1 - volatility);
+        const diff = totalWealth - startVal;
+        return chartCurve.map(o => startVal + diff * o);
+    }
+
+    function drawWealthChart() {
+        const canvas = document.getElementById('wealthChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 2;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const points = getChartPoints();
+        const min = Math.min(...points);
+        const max = Math.max(...points);
+        const range = (max - min) || 1;
+        const padTop = 16;
+        const padBot = 16;
+        const usableH = h - padTop - padBot;
+
+        const getX = (i) => (i / (points.length - 1)) * w;
+        const getY = (val) => padTop + usableH - ((val - min) / range) * usableH;
+
+        const baseY = getY(points[0]);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, baseY);
+        ctx.lineTo(w, baseY);
+        ctx.stroke();
+        ctx.restore();
+
+        const grad = ctx.createLinearGradient(0, padTop, 0, h);
+        grad.addColorStop(0, 'rgba(0, 214, 108, 0.25)');
+        grad.addColorStop(1, 'rgba(0, 214, 108, 0.0)');
+
+        ctx.beginPath();
+        points.forEach((v, i) => {
+            const x = getX(i);
+            const y = getY(v);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        points.forEach((v, i) => {
+            const x = getX(i);
+            const y = getY(v);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = '#00d66c';
+        ctx.lineWidth = 2.4;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        if (scrubIndex !== null && points[scrubIndex] !== undefined) {
+            const sx = getX(scrubIndex);
+            const sy = getY(points[scrubIndex]);
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(sx, 0);
+            ctx.lineTo(sx, h);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#00d66c';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#0d0f14';
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    function initChartTouch() {
+        const canvas = document.getElementById('wealthChart');
+        const handleMove = (clientX) => {
+            const points = getChartPoints();
+            const rect = canvas.getBoundingClientRect();
+            const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            const idx = Math.round((relX / rect.width) * (points.length - 1));
+            scrubIndex = idx;
+            const val = points[idx];
+            const start = points[0];
+            const diff = val - start;
+            const pct = start > 0 ? (diff / start) * 100 : 0;
+
+            document.getElementById('totalWealthEl').textContent = fmtEur(val);
+            const pnlEl = document.getElementById('totalPnlEl');
+            pnlEl.textContent = `${fmtEur(diff, true)} (${diff >= 0 ? '+' : ''}${pct.toFixed(2).replace('.', ',')}%)`;
+            pnlEl.className = diff >= 0 ? 'pos' : 'neg';
+            drawWealthChart();
+        };
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) handleMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', () => {
+            scrubIndex = null;
+            renderAll();
+        });
+    }
+
+    function setTf(tf, label, btn) {
+        currentTf = tf;
+        currentPeriodLabel = label;
+        document.querySelectorAll('.tf-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        generateChartCurve();
+        renderAll();
+    }
+
+    function cycleDisplayMode() {
+        displayMode = (displayMode + 1) % 3;
+        const labels = ['Koers & Dag % ⌄', 'Positiewaarde (€) ⌄', 'Totale Winst (€) ⌄'];
+        document.getElementById('modeToggleBtn').textContent = labels[displayMode];
+        renderAll();
+    }
+
+    function togglePrivacy() {
+        isPrivacy = !isPrivacy;
+        renderAll();
+    }
+
+    function toggleCardDetails() {
+        isCardRevealed = !isCardRevealed;
+        renderAll();
+    }
+
+    function switchTab(tab) {
+        if (tab !== 'admin') adminUnlocked = false;
+        document.querySelectorAll('.tab-view').forEach(s => s.classList.remove('active'));
+        document.getElementById('view-' + tab).classList.add('active');
+
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const activeBtn = document.getElementById('nav-' + tab);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        renderAll();
+    }
+
+    function requestPinForAdmin() {
+        if (adminUnlocked) {
+            switchTab('admin');
+            return;
+        }
+        enteredPin = '';
+        updatePinDots();
+        document.getElementById('pinModal').classList.add('open');
+    }
+
+    function closePinModal() {
+        document.getElementById('pinModal').classList.remove('open');
+        enteredPin = '';
+    }
+
+    function pressPin(digit) {
+        if (enteredPin.length >= 4) return;
+        enteredPin += digit;
+        updatePinDots();
+
+        if (enteredPin.length === 4) {
+            if (enteredPin === SECRET_PIN) {
+                setTimeout(() => {
+                    adminUnlocked = true;
+                    closePinModal();
+                    switchTab('admin');
+                }, 120);
+            } else {
+                const dots = document.querySelectorAll('#pinDots .pin-dot');
+                dots.forEach(d => d.classList.add('error'));
+                setTimeout(() => {
+                    enteredPin = '';
+                    updatePinDots();
+                }, 450);
+            }
+        }
+    }
+
+    function backspacePin() {
+        enteredPin = enteredPin.slice(0, -1);
+        updatePinDots();
+    }
+
+    function updatePinDots() {
+        const dots = document.querySelectorAll('#pinDots .pin-dot');
+        dots.forEach((d, i) => {
+            d.className = 'pin-dot' + (i < enteredPin.length ? ' filled' : '');
+        });
+    }
+
+    function lockAndExitAdmin() {
+        adminUnlocked = false;
+        switchTab('portfolio');
+    }
+
+    function saveAdminFields() {
+        state.name = document.getElementById('admName').value || 'T. van den Berg';
+        state.iban = document.getElementById('admIban').value || '';
+        state.cash = parseFloat(document.getElementById('admCash').value) || 0;
+        state.cardLast4 = document.getElementById('admCardLast4').value || '8910';
+        saveState();
+        renderAll();
+    }
+
+    function triggerIncomingTimer() {
+        const sender = document.getElementById('timerSender').value.trim() || 'Stripe Payments Europe';
+        const amount = parseFloat(document.getElementById('timerAmount').value) || 8450;
+
+        switchTab('portfolio');
+
+        setTimeout(() => {
+            state.cash = (parseFloat(state.cash) || 0) + amount;
+            state.transactions.unshift({
+                title: sender,
+                sub: 'Directe bijschrijving • Zojuist',
+                amount: Math.abs(amount)
+            });
+            saveState();
+            renderAll();
+
+            const banner = document.getElementById('iosPushBanner');
+            document.getElementById('pushText').textContent = `${sender}: + ${fmtEur(Math.abs(amount))} ontvangen`;
+            banner.classList.add('show');
+
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 4500);
+        }, 5000);
+    }
+
+    function addCustomTicker() {
+        const rawTicker = document.getElementById('quickTicker').value.trim();
+        const price = parseFloat(document.getElementById('quickPrice').value);
+        const qty = parseFloat(document.getElementById('quickQty').value);
+
+        if (!rawTicker || isNaN(price) || isNaN(qty)) return;
+
+        const sym = rawTicker.split(' ')[0].toUpperCase().substring(0, 5);
+        state.stocks.unshift({
+            symbol: sym,
+            name: rawTicker,
+            sub: `${sym} • Euronext / Google Finance`,
+            qty: qty,
+            price: price,
+            gak: price * 0.9,
+            changePct: 1.45,
+            gfQuery: sym
+        });
+
+        document.getElementById('quickTicker').value = '';
+        document.getElementById('quickPrice').value = '';
+        document.getElementById('quickQty').value = '';
+
+        saveState();
+        renderAll();
+    }
+
+    function openStockModal(idx) {
+        const s = state.stocks[idx];
+        document.getElementById('smIndex').value = idx;
+        document.getElementById('smTitle').textContent = s.name;
+        document.getElementById('smName').value = s.name;
+        document.getElementById('smSub').value = s.sub;
+        document.getElementById('smQty').value = s.qty;
+        document.getElementById('smPrice').value = s.price;
+        document.getElementById('smChange').value = s.changePct;
+        document.getElementById('smGoogleLink').href = `https://www.google.com/finance/quote/${encodeURIComponent(s.gfQuery || s.symbol)}?hl=nl`;
+        document.getElementById('stockModal').classList.add('open');
+    }
+
+    function closeStockModal() {
+        document.getElementById('stockModal').classList.remove('open');
+    }
+
+    function saveStockModal() {
+        const idx = parseInt(document.getElementById('smIndex').value);
+        if (state.stocks[idx]) {
+            state.stocks[idx].name = document.getElementById('smName').value;
+            state.stocks[idx].sub = document.getElementById('smSub').value;
+            state.stocks[idx].qty = parseFloat(document.getElementById('smQty').value) || 0;
+            state.stocks[idx].price = parseFloat(document.getElementById('smPrice').value) || 0;
+            state.stocks[idx].changePct = parseFloat(document.getElementById('smChange').value) || 0;
+            saveState();
+            renderAll();
+        }
+        closeStockModal();
+    }
+
+    function deleteStockPos() {
+        const idx = parseInt(document.getElementById('smIndex').value);
+        state.stocks.splice(idx, 1);
+        saveState();
+        renderAll();
+        closeStockModal();
+    }
+
+    function openTxModal(idx) {
+        document.getElementById('txIndex').value = idx;
+        if (idx >= 0 && state.transactions[idx]) {
+            const t = state.transactions[idx];
+            document.getElementById('txModalTitle').textContent = 'Transactie wijzigen';
+            document.getElementById('txTitleInp').value = t.title;
+            document.getElementById('txSubInp').value = t.sub;
+            document.getElementById('txAmtInp').value = t.amount;
+        } else {
+            document.getElementById('txModalTitle').textContent = 'Nieuwe Cashflow toevoegen';
+            document.getElementById('txTitleInp').value = '';
+            document.getElementById('txSubInp').value = 'Directe overboeking • Vandaag';
+            document.getElementById('txAmtInp').value = '';
+        }
+        document.getElementById('txModal').classList.add('open');
+    }
+
+    function openQuickCashModal(type) {
+        document.getElementById('txIndex').value = -1;
+        document.getElementById('txModalTitle').textContent = type === 'deposit' ? 'Geld Storten op Rekening' : 'Geld Overboeken';
+        document.getElementById('txTitleInp').value = type === 'deposit' ? 'iDEAL / Zakelijke Storting' : 'Overboeking naar tegenrekening';
+        document.getElementById('txSubInp').value = 'Direct verwerkt • Vandaag';
+        document.getElementById('txAmtInp').value = type === 'deposit' ? '2500' : '-1000';
+        document.getElementById('txModal').classList.add('open');
+    }
+
+    function closeTxModal() {
+        document.getElementById('txModal').classList.remove('open');
+    }
+
+    function saveTxModal() {
+        const idx = parseInt(document.getElementById('txIndex').value);
+        const title = document.getElementById('txTitleInp').value.trim() || 'Overboeking';
+        const sub = document.getElementById('txSubInp').value.trim() || 'Vandaag';
+        const amt = parseFloat(document.getElementById('txAmtInp').value) || 0;
+
+        if (idx >= 0 && state.transactions[idx]) {
+            state.transactions[idx] = { title, sub, amount: amt };
+        } else {
+            state.transactions.unshift({ title, sub, amount: amt });
+            state.cash = (parseFloat(state.cash) || 0) + amt;
+        }
+        saveState();
+        renderAll();
+        closeTxModal();
+    }
+
+    function deleteTxModal() {
+        const idx = parseInt(document.getElementById('txIndex').value);
+        if (idx >= 0) {
+            state.transactions.splice(idx, 1);
+            saveState();
+            renderAll();
+        }
+        closeTxModal();
+    }
+
+    function resetToDefault() {
+        if (confirm('Wil je alle bedragen en aandelen terugzetten naar de standaardwaarden?')) {
+            localStorage.removeItem(STORAGE_KEY);
+            state = JSON.parse(JSON.stringify(defaultState));
+            generateChartCurve();
+            renderAll();
+        }
+    }
+
+    async function syncLivePrices() {
+        try {
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur&include_24hr_change=true');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.bitcoin && data.bitcoin.eur) {
+                    const btcItem = state.stocks.find(s => s.symbol === 'BTC');
+                    if (btcItem) {
+                        btcItem
